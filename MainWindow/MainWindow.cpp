@@ -280,25 +280,22 @@ void MainWindow::showEvent(QShowEvent *event)
 
 void MainWindow::setupServer(void)
 {
-    //spawn a new server if we previously spawned one
-    bool spawnNewServer = bool(_server);
-
     //shutdown a previously opened server
     _server = Pothos::RemoteServer();
 
-    //test connect to an existing server on localhost
-    if (not spawnNewServer) try
+    //make a server and node that is temporary with this process: one
+    //PothosFlow for each computer, the server uses the locator port
+    const auto port = Pothos::RemoteServer::getLocatorPort();
+    try
     {
-        Pothos::RemoteClient client("tcp://"+Pothos::Util::getLoopbackAddr());
+        _server = Pothos::RemoteServer("tcp://"+Pothos::Util::getLoopbackAddr(port));
     }
-    catch (const Pothos::RemoteClientError &)
+    catch (const Pothos::RemoteServerError &ex)
     {
-        spawnNewServer = true;
+        throw Pothos::RemoteServerError("PothosFlow",
+            "Another PothosFlow or a PothosUtil --proxy-server uses the port " + port +
+            " of this computer. Close it, then start PothosFlow again. (" + ex.displayText() + ")");
     }
-
-    //make a server and node that is temporary with this process
-    //TODO make server background so it does not close with process
-    _server = Pothos::RemoteServer("tcp://"+Pothos::Util::getLoopbackAddr(Pothos::RemoteServer::getLocatorPort()));
 
     //perform a test connection to the server
     Pothos::RemoteClient client("tcp://"+Pothos::Util::getLoopbackAddr()); //now it should connect to the new server

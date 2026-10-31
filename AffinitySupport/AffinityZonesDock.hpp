@@ -26,6 +26,7 @@ public:
     static AffinityZonesDock *global(void);
 
     AffinityZonesDock(QWidget *parent, HostExplorerDock *hostExplorer);
+    ~AffinityZonesDock(void) override;
 
     //! Make a new affinity selection menu that updates with this panel's configuration
     QMenu *makeMenu(QWidget *parent);

@@ -20,6 +20,7 @@ class ConnectionPropertiesPanel : public QWidget
     Q_OBJECT
 public:
     ConnectionPropertiesPanel(GraphConnection *conn, QWidget *parent);
+    ~ConnectionPropertiesPanel(void) override;
 
 signals:
     void stateChanged(const GraphState &);

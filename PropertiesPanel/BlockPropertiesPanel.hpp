@@ -23,6 +23,7 @@ class BlockPropertiesPanel : public QWidget
     Q_OBJECT
 public:
     BlockPropertiesPanel(GraphBlock *block, QWidget *parent);
+    ~BlockPropertiesPanel(void) override;
 
     QString getParamDocString(const QString &propKey);
 

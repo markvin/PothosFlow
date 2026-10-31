@@ -228,6 +228,12 @@ BlockPropertiesPanel::BlockPropertiesPanel(GraphBlock *block, QWidget *parent):
     _ignoreChanges = false;
 }
 
+BlockPropertiesPanel::~BlockPropertiesPanel(void)
+{
+    //the tabs are deleted after this destructor: no slot call on a partly destroyed panel
+    if (_infoTabs != nullptr) _infoTabs->disconnect(this);
+}
+
 QString BlockPropertiesPanel::getParamDocString(const QString &propKey)
 {
     const auto paramDesc = _block->getParamDesc(propKey);

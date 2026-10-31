@@ -4,7 +4,8 @@
 //Smoke test of PothosFlow without a display (QT_QPA_PLATFORM=offscreen):
 //the main window comes into view, the block cache gets the blocks,
 //Help -> About shows the about window, the message window shows a log
-//message, and the window closes without an error.
+//message, and the window closes without an error. Before that, a second
+//server on the locator port gives a clear message.
 
 #include "MainWindow/FlowSetup.hpp"
 #include "MainWindow/MainWindow.hpp"
@@ -14,6 +15,8 @@
 #include "GraphEditor/GraphEditorTabs.hpp"
 #include "GraphEditor/GraphDraw.hpp"
 #include <Pothos/Exception.hpp>
+#include <Pothos/Remote.hpp>
+#include <Pothos/Util/Network.hpp>
 #include <Pothos/System/Logger.hpp>
 #include <QAction>
 #include <QAbstractButton>
@@ -103,6 +106,19 @@ int main(int argc, char **argv)
     FlowProcessSetup processSetup;
     QApplication app(argc, argv);
     configureFlowApplication(app);
+
+    //0) another server on the locator port: the main window gives a clear message
+    {
+        std::string message;
+        {
+            Pothos::RemoteServer other("tcp://"+Pothos::Util::getLoopbackAddr(Pothos::RemoteServer::getLocatorPort()));
+            try {MainWindow window(nullptr);}
+            catch (const Pothos::Exception &ex) {message = ex.displayText();}
+        }
+        check("locator_port_in_use", message.find("Another PothosFlow") != std::string::npos,
+            message.empty()? "no exception" : "the message is: " + message);
+        QApplication::processEvents();
+    }
 
     POTHOS_EXCEPTION_TRY
     {

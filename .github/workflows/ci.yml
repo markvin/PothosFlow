@@ -8,7 +8,7 @@ env:
   # the branches of the Pothos core and of the toolkit that flow builds and
   # runs against (blocks: the block cache of the smoke test)
   POTHOS_CORE_REPO: markvin/PothosCore
-  POTHOS_CORE_REF: phase15-flow
+  POTHOS_CORE_REF: pothos2
   POTHOS_BLOCKS_REPO: markvin/PothosBlocks
   POTHOS_BLOCKS_REF: pothos2
   # the minimum Qt version of flow (Ubuntu 24.04 has Qt 6.4: too old).

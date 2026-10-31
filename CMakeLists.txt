@@ -9,6 +9,8 @@ project(PothosFlow CXX)
 
 option(FLOW_BUILD_TESTS "Register the CTest tests of flow" ${PROJECT_IS_TOP_LEVEL})
 option(FLOW_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (GCC and Clang)" OFF)
+#an aggregate build (PothosBase) builds the smoke test and runs it from its own stage
+option(FLOW_BUILD_SMOKE_TEST "Build the smoke test executable PothosFlowSmokeTest" ${FLOW_BUILD_TESTS})
 
 #the core defines the variable POTHOS_ROOT (its install prefix), and the
 #runtime environment often sets POTHOS_ROOT too. find_package must not use
@@ -319,8 +321,10 @@ add_subdirectory(EditWidgets)
 # flow module of the stage. Flow needs no display: Qt uses the offscreen
 # platform.
 ########################################################################
-if(FLOW_BUILD_TESTS)
+if(FLOW_BUILD_SMOKE_TEST OR FLOW_BUILD_TESTS)
     add_subdirectory(Tests)
+endif()
+if(FLOW_BUILD_TESTS)
     enable_testing()
     set(FLOW_STAGE_DIR ${PROJECT_BINARY_DIR}/stage)
 

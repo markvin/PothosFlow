@@ -312,7 +312,7 @@ void EvalEngineImpl::handleOrphanedGuiBlocks(void)
     for (auto it = _guiBlocks.begin(); it != _guiBlocks.end();)
     {
         auto thisIt = it++; //increment before erase
-        if (not thisIt->use_count() == 1) continue;
+        if (thisIt->use_count() != 1) continue;
         auto handle = new std::shared_ptr<void>(*thisIt);
         _guiBlocks.erase(thisIt);
         assert(handle->use_count() == 1);

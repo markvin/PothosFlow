@@ -70,6 +70,12 @@ AffinityZonesDock::AffinityZonesDock(QWidget *parent, HostExplorerDock *hostExpl
     this->initAffinityZoneEditors();
 }
 
+AffinityZonesDock::~AffinityZonesDock(void)
+{
+    //the tabs are deleted after this destructor: the current zone in the settings does not change at exit
+    if (_editorsTabs != nullptr) _editorsTabs->disconnect(this);
+}
+
 QMenu *AffinityZonesDock::makeMenu(QWidget *parent)
 {
     return new AffinityZonesMenu(this, parent);

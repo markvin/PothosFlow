@@ -75,6 +75,14 @@ ConnectionPropertiesPanel::ConnectionPropertiesPanel(GraphConnection *conn, QWid
     this->populateConnectionsList(); //init state
 }
 
+ConnectionPropertiesPanel::~ConnectionPropertiesPanel(void)
+{
+    //the child lists are deleted after this destructor: no slot call on a partly destroyed panel
+    if (_outputListWidget != nullptr) _outputListWidget->disconnect(this);
+    if (_inputListWidget != nullptr) _inputListWidget->disconnect(this);
+    if (_connectionsListWidget != nullptr) _connectionsListWidget->disconnect(this);
+}
+
 void ConnectionPropertiesPanel::handleConnectionDestroyed(QObject *)
 {
     this->deleteLater();

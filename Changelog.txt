@@ -6,6 +6,11 @@ Release 0.8.0 (pending)
 - Port to the modernized Pothos core (branch pothos2): no Poco; the log
   messages come from the log listener API of the core
 - Qt 6 only, Qt 6.5 or higher; the Qt 5 support is removed
+- A second PothosFlow (or a PothosUtil --proxy-server on port 16415)
+  gives a clear message in place of the raw server error
+- The properties panels and the affinity zones dock disconnect their
+  child widgets in the destructor (no slot call during the destruction)
+- The smoke test unsets the POTHOS_* variables of a developer shell
 - CMake 3.25 or higher; a missing Qt 6 stops the configure step
 - The application sources are an internal static library; the executable
   and the smoke test link it

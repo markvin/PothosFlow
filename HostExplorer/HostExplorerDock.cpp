@@ -44,8 +44,8 @@ void HostExplorerDock::addTabAndConnect(T *tabWidget, const QString &name)
 {
     const auto index = _tabs->addTab(tabWidget, name);
     connect(_table, &HostSelectionTable::hostInfoRequest, tabWidget, &T::handleInfoRequest);
-    connect(tabWidget, &T::startLoad, [=](void){emit this->start(index);});
-    connect(tabWidget, &T::stopLoad, [=](void){emit this->stop(index);});
+    connect(tabWidget, &T::startLoad, [=, this](void){emit this->start(index);});
+    connect(tabWidget, &T::stopLoad, [=, this](void){emit this->stop(index);});
 }
 
 QStringList HostExplorerDock::hostUriList(void) const

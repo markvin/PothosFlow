@@ -18,7 +18,7 @@ public:
         QDoubleSpinBox(parent)
     {
         connect(this, &QDoubleSpinBox::editingFinished, this, &DoubleSpinBox::widgetChanged);
-        connect(this, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=](double){this->handleWidgetChanged();});
+        connect(this, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=, this](double){this->handleWidgetChanged();});
     }
 
 public slots:

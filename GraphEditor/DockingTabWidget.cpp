@@ -359,7 +359,7 @@ void DockingTabWidget::tabInserted(int index)
         QString("QPushButton:checked:hover{border-image: url(%1);}").arg(makeIconPath("dockingtab-undock-hover.png"))+
         QString("QPushButton:checked:pressed{border-image: url(%1);}").arg(makeIconPath("dockingtab-undock-down.png"));
     button->setStyleSheet(buttonStyle);
-    connect(button, &QPushButton::clicked, [=](void){this->handleUndockButton(QTabWidget::widget(index));});
+    connect(button, &QPushButton::clicked, [=, this](void){this->handleUndockButton(QTabWidget::widget(index));});
     this->tabBar()->setTabButton(index, QTabBar::RightSide, button);
     this->page(index)->internalUpdate();
 

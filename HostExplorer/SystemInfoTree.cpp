@@ -9,7 +9,7 @@
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrent>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <functional> //std::bind
 
 /***********************************************************************
@@ -17,7 +17,6 @@
  **********************************************************************/
 static InfoResult getInfo(const std::string &uriStr)
 {
-    static auto &logger = Poco::Logger::get("PothosFlow.SystemInfoTree");
     InfoResult info;
     POTHOS_EXCEPTION_TRY
     {
@@ -30,13 +29,13 @@ static InfoResult getInfo(const std::string &uriStr)
         const auto jsonDoc = QJsonDocument::fromJson(devInfoBytes, &errorParser);
         if (jsonDoc.isNull())
         {
-            logger.error("Failed to parse device info %s - %s", uriStr, errorParser.errorString().toStdString());
+            POTHOS_LOG_ERROR("PothosFlow.SystemInfoTree", "Failed to parse device info {} - {}", uriStr, errorParser.errorString().toStdString());
         }
         else info.deviceInfo = jsonDoc.array();
     }
     POTHOS_EXCEPTION_CATCH(const Pothos::Exception &ex)
     {
-        logger.error("Failed to query system info %s - %s", uriStr, ex.displayText());
+        POTHOS_LOG_ERROR("PothosFlow.SystemInfoTree", "Failed to query system info {} - {}", uriStr, ex.displayText());
     }
     return info;
 }

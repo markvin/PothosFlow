@@ -19,7 +19,9 @@ POTHOS_MODULE_UTIL(
     TARGET CoreEditWidgets
     SOURCES ${SOURCES}
     LIBRARIES
-        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt6::Widgets
         PothosQtColorPicker
     DESTINATION flow
 )
+#the module is in <libdir>/Pothos/modules<ABI>/flow: PothosQtColorPicker is in <libdir>
+flow_target(CoreEditWidgets RPATH ../../..)

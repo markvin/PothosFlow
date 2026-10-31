@@ -7,7 +7,7 @@
 #include "BlockPropertiesPanel.hpp"
 #include "GraphObjects/GraphObject.hpp"
 #include "GraphObjects/GraphBlock.hpp"
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFormLayout>
@@ -111,7 +111,7 @@ BlockPropertiesPanel::BlockPropertiesPanel(GraphBlock *block, QWidget *parent):
         _affinityZoneOriginal = _block->getAffinityZone();
         _affinityZoneBox = AffinityZonesDock::global()->makeComboBox(this);
         _formLayout->addRow(_affinityZoneLabel, _affinityZoneBox);
-        connect(_affinityZoneBox, QOverload<int>::of(&QComboBox::activated), [=](int){emit this->handleAffinityZoneChanged();});
+        connect(_affinityZoneBox, QOverload<int>::of(&QComboBox::activated), [=, this](int){emit this->handleAffinityZoneChanged();});
     }
 
     //errors

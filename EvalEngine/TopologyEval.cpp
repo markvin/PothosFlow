@@ -10,8 +10,7 @@
 
 TopologyEval::TopologyEval(void):
     _topology(new Pothos::Topology()),
-    _failureState(false),
-    _logger(Poco::Logger::get("PothosFlow.TopologyEval"))
+    _failureState(false)
 {
     return;
 }
@@ -57,7 +56,7 @@ void TopologyEval::disconnect(void)
             }
             catch (const Pothos::Exception &ex)
             {
-                _logger.error("Failed to disconnect: %s", ex.displayText());
+                POTHOS_LOG_ERROR("PothosFlow.TopologyEval", "Failed to disconnect: {}", ex.displayText());
                 _failureState = true;
                 return;
             }
@@ -104,7 +103,7 @@ void TopologyEval::update(void)
         }
         catch (const Pothos::Exception &ex)
         {
-            _logger.error("Failed to disconnect: %s", ex.displayText());
+            POTHOS_LOG_ERROR("PothosFlow.TopologyEval", "Failed to disconnect: {}", ex.displayText());
             _failureState = true;
             return;
         }
@@ -137,7 +136,7 @@ void TopologyEval::update(void)
         }
         catch (const Pothos::Exception &ex)
         {
-            _logger.error("Failed to connect: %s", ex.displayText());
+            POTHOS_LOG_ERROR("PothosFlow.TopologyEval", "Failed to connect: {}", ex.displayText());
             _failureState = true;
             return;
         }
@@ -163,7 +162,7 @@ void TopologyEval::commit(void)
     }
     catch (const Pothos::Exception &ex)
     {
-        _logger.error("Failed to commit: %s", ex.displayText());
+        POTHOS_LOG_ERROR("PothosFlow.TopologyEval", "Failed to commit: {}", ex.displayText());
         _failureState = true;
     }
 }

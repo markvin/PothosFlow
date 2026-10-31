@@ -16,7 +16,7 @@ void GraphBlock::setBlockDesc(const QJsonObject &blockDesc)
     //extract the name or title from the description
     if (not blockDesc.contains("name"))
     {
-        _impl->logger.error("Block '%s' missing 'name'", this->getBlockDescPath().toStdString());
+        POTHOS_LOG_ERROR("PothosFlow.GraphBlock", "Block '{}' missing 'name'", this->getBlockDescPath().toStdString());
         return;
     }
     this->setTitle(blockDesc["name"].toString());
@@ -31,7 +31,7 @@ void GraphBlock::setBlockDesc(const QJsonObject &blockDesc)
         const auto param = paramValue.toObject();
         if (not param.contains("key"))
         {
-            _impl->logger.error("Block '%s' param missing 'key'", this->getTitle().toStdString());
+            POTHOS_LOG_ERROR("PothosFlow.GraphBlock", "Block '{}' param missing 'key'", this->getTitle().toStdString());
             return;
         }
         const auto key = param["key"].toString();
@@ -48,7 +48,7 @@ void GraphBlock::setBlockDesc(const QJsonObject &blockDesc)
             auto opt0 = param["options"].toArray().at(0).toObject();
             if (not opt0.contains("value"))
             {
-                _impl->logger.warning("Block '%s' [param %s] missing 'value'", this->getTitle().toStdString(), name.toStdString());
+                POTHOS_LOG_WARNING("PothosFlow.GraphBlock", "Block '{}' [param {}] missing 'value'", this->getTitle().toStdString(), name.toStdString());
             }
             else this->setPropertyValue(key, opt0["value"].toString());
         }

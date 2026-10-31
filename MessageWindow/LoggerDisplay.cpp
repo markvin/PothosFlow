@@ -9,7 +9,8 @@
 #include <QScrollBar>
 #include <QToolButton>
 #include <QTimer>
-#include <Poco/DateTimeFormatter.h>
+#include <chrono>
+#include <format>
 
 static const long CHECK_MSGS_TIMEOUT_MS = 100;
 static const size_t MAX_MSGS_PER_TIMEOUT = 3;
@@ -45,10 +46,10 @@ void LoggerDisplay::handleCheckMsgs(void)
     const bool autoScroll = _text->verticalScrollBar()->value()+50 > _text->verticalScrollBar()->maximum();
 
     size_t numMsgs = 0;
-    Poco::Message msg;
-    while (_channel->pop(msg))
+    Pothos::System::LogRecord record;
+    while (_channel->pop(record))
     {
-        this->handleLogMessage(msg);
+        this->handleLogMessage(record);
         if (++numMsgs == MAX_MSGS_PER_TIMEOUT) break;
     }
 
@@ -60,24 +61,26 @@ void LoggerDisplay::handleCheckMsgs(void)
     }
 }
 
-void LoggerDisplay::handleLogMessage(const Poco::Message &msg)
+void LoggerDisplay::handleLogMessage(const Pothos::System::LogRecord &record)
 {
+    using Pothos::System::LogLevel;
     QString color;
-    switch (msg.getPriority())
+    switch (record.level)
     {
-    case Poco::Message::PRIO_INFORMATION: color = defaultPaletteForeground(); break;
-    case Poco::Message::PRIO_NOTICE: color = "green"; break;
-    case Poco::Message::PRIO_WARNING: color = "orange"; break;
-    case Poco::Message::PRIO_ERROR: color = "red"; break;
-    case Poco::Message::PRIO_CRITICAL: color = "red"; break;
-    case Poco::Message::PRIO_FATAL: color = "red"; break;
+    case LogLevel::Information: color = defaultPaletteForeground(); break;
+    case LogLevel::Notice: color = "green"; break;
+    case LogLevel::Warning: color = "orange"; break;
+    case LogLevel::Error: color = "red"; break;
+    case LogLevel::Critical: color = "red"; break;
+    case LogLevel::Fatal: color = "red"; break;
     default: color = defaultPaletteForeground();
     }
 
     QString sep(":");
-    const auto timeStr = Poco::DateTimeFormatter::format(msg.getTime(), "%H:%M:%s");
+    //UTC time with microseconds (the format of the earlier versions)
+    const auto timeStr = std::format("{:%H:%M:%S}", std::chrono::floor<std::chrono::microseconds>(record.time));
 
-    auto body = QString::fromStdString(msg.getText()).toHtmlEscaped();
+    auto body = QString::fromStdString(record.text).toHtmlEscaped();
     if (body.count("\n") > 1)
     {
         sep = " &rArr;";
@@ -86,7 +89,7 @@ void LoggerDisplay::handleLogMessage(const Poco::Message &msg)
 
     auto line = QString("<font color=\"%1\"><b>[%2] %3%4</b></font> %5").arg(
         color, QString::fromStdString(timeStr),
-        QString::fromStdString(msg.getSource()),
+        QString::fromStdString(record.source),
         sep, body);
 
     _text->appendHtml(line);
@@ -98,7 +101,7 @@ void LoggerDisplay::resizeEvent(QResizeEvent *event)
     return QStackedWidget::resizeEvent(event);
 }
 
-void LoggerDisplay::enterEvent(QEnterEventCompat *event)
+void LoggerDisplay::enterEvent(QEnterEvent *event)
 {
     _clearButton->show();
     _clearButton->move(_text->viewport()->width()-_clearButton->width(), 0);

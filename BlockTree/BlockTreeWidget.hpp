@@ -48,14 +48,7 @@ private:
 
     bool blockDescMatchesFilter(const QJsonObject &blockDesc);
 
-    //qt6 changed the function signature to be a reference
-    #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    #define mimeDataRef(name) name
-    #else
-    #define mimeDataRef(name) &name
-    #endif
-
-    QMimeData *mimeData(const QList<QTreeWidgetItem *> mimeDataRef(items)) const override;
+    QMimeData *mimeData(const QList<QTreeWidgetItem *> &items) const override;
 
     GraphEditorTabs *_editorTabs;
     QString _filter;

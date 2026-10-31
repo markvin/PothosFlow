@@ -7,7 +7,7 @@
 #include "HostExplorer/HostExplorerDock.hpp"
 #include <Pothos/Remote.hpp>
 #include <Pothos/Proxy.hpp>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <QFormLayout>
 #define QT_QTCOLORPICKER_IMPORT
 #include <QtColorPicker>

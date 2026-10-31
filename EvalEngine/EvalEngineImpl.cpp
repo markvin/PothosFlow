@@ -37,7 +37,7 @@ public:
 public slots:
     void handleGuiBlockErase(std::shared_ptr<void> *handle)
     {
-        assert(handle->unique());
+        assert(handle->use_count() == 1);
         delete handle;
     }
 };
@@ -312,10 +312,10 @@ void EvalEngineImpl::handleOrphanedGuiBlocks(void)
     for (auto it = _guiBlocks.begin(); it != _guiBlocks.end();)
     {
         auto thisIt = it++; //increment before erase
-        if (not thisIt->unique()) continue;
+        if (thisIt->use_count() != 1) continue;
         auto handle = new std::shared_ptr<void>(*thisIt);
         _guiBlocks.erase(thisIt);
-        assert(handle->unique());
+        assert(handle->use_count() == 1);
         QMetaObject::invokeMethod(_guiBlockDeleter.get(), "handleGuiBlockErase",
             Qt::QueuedConnection, Q_ARG(std::shared_ptr<void> *, handle));
     }

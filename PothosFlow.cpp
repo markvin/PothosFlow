@@ -3,50 +3,17 @@
 
 #include "MainWindow/MainWindow.hpp"
 #include "MainWindow/MainSettings.hpp"
-#include "MainWindow/IconUtils.hpp"
-#include <Pothos/System.hpp>
-#include <Poco/Logger.h>
-#include <Poco/Environment.h>
+#include "MainWindow/FlowSetup.hpp"
+#include <Pothos/Exception.hpp>
 #include <QMessageBox>
 #include <QApplication>
 #include <QDir>
 #include <stdexcept>
 #include <cstdlib> //EXIT_FAILURE
 
-static void myQLogHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-{
-    Poco::Message::Priority prio(Poco::Message::PRIO_INFORMATION);
-    switch (type) {
-    case QtDebugMsg: prio = Poco::Message::PRIO_DEBUG; break;
-    #if QT_VERSION >= QT_VERSION_CHECK(5, 5, 0)
-    case QtInfoMsg: prio = Poco::Message::PRIO_INFORMATION; break;
-    #endif
-    case QtWarningMsg: prio = Poco::Message::PRIO_WARNING; break;
-    case QtCriticalMsg: prio = Poco::Message::PRIO_CRITICAL; break;
-    case QtFatalMsg: prio = Poco::Message::PRIO_FATAL; break;
-    }
-    const Poco::Message message(context.category, msg.toStdString(), prio, context.file, context.line);
-    Poco::Logger::get(context.category).log(message);
-}
-
-struct MyScopedSyslogListener
-{
-    MyScopedSyslogListener(void)
-    {
-        const auto port = Pothos::System::Logger::startSyslogListener();
-        //FIXME listener server supports IPv4 only; must forward to IPv4
-        Poco::Environment::set("POTHOS_SYSLOG_ADDR", "127.0.0.1:"+port);
-    }
-    ~MyScopedSyslogListener(void)
-    {
-        Pothos::System::Logger::stopSyslogListener();
-    }
-};
-
 int main(int argc, char **argv)
 {
-    qInstallMessageHandler(myQLogHandler);
-    MyScopedSyslogListener syslogListener;
+    FlowProcessSetup processSetup;
 
     //did the user specified files on the command line?
     //stash the files so they are loaded into the editor
@@ -67,13 +34,7 @@ int main(int argc, char **argv)
 
     //create the entry point to the GUI
     QApplication app(argc, argv);
-    app.setApplicationName("Pothos");
-    app.setOrganizationName("PothosWare");
-    app.setOrganizationDomain("www.pothosware.com");
-    app.setApplicationVersion(QString::fromStdString(Pothos::System::getApiVersion()));
-
-    //setup the application icon
-    app.setWindowIcon(QIcon(makeIconPath("PothosFlow.png")));
+    configureFlowApplication(app);
 
     POTHOS_EXCEPTION_TRY
     {

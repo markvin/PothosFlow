@@ -4,7 +4,7 @@
 #pragma once
 #include <Pothos/Config.hpp>
 #include "GraphObjects/GraphObject.hpp"
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <QObject>
 #include <chrono>
 
@@ -74,7 +74,6 @@ private slots:
 private:
     EvalTracer *_tracer;
     bool _flaggedLockUp;
-    Poco::Logger &_logger;
     QThread *_thread;
     QTimer *_monitorTimer;
     EvalEngineImpl *_impl;

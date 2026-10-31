@@ -15,7 +15,7 @@
 #include <QLineEdit>
 #include <QTabWidget>
 #include <QJsonDocument>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <cassert>
 
 static AffinityZonesDock *globalAffinityZonesDock = nullptr;
@@ -158,15 +158,14 @@ AffinityZoneEditor *AffinityZonesDock::createZoneFromName(const QString &zoneNam
         }
         else
         {
-            static auto &logger = Poco::Logger::get("PothosFlow.AffinityZonesDock");
-            logger.error("Failed to load editor for zone '%s' -- %s",
+            POTHOS_LOG_ERROR("PothosFlow.AffinityZonesDock", "Failed to load editor for zone '{}' -- {}",
                 zoneName.toStdString(), parseError.errorString().toStdString());
         }
     }
 
     //now connect the changed signal after initialization+restore changes
-    connect(editor, &AffinityZoneEditor::settingsChanged, [=](void){this->saveAffinityZoneEditorsState();});
-    connect(editor, &AffinityZoneEditor::settingsChanged, [=](void){emit this->zoneChanged(zoneName);});
+    connect(editor, &AffinityZoneEditor::settingsChanged, [=, this](void){this->saveAffinityZoneEditorsState();});
+    connect(editor, &AffinityZoneEditor::settingsChanged, [=, this](void){emit this->zoneChanged(zoneName);});
 
     //when to update colors
     connect(editor, &AffinityZoneEditor::settingsChanged, this, &AffinityZonesDock::updateTabColors);

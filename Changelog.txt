@@ -1,5 +1,24 @@
 This this the changelog file for the Pothos Flow toolkit.
 
+Release 0.8.0 (pending)
+==========================
+
+- Port to the modernized Pothos core (branch pothos2): no Poco; the log
+  messages come from the log listener API of the core
+- Qt 6 only, Qt 6.5 or higher; the Qt 5 support is removed
+- CMake 3.25 or higher; a missing Qt 6 stops the configure step
+- The application sources are an internal static library; the executable
+  and the smoke test link it
+- Add a smoke test without a display: the main window, the block cache,
+  Help -> About, the message window and the exit
+- Fixed: a crash when the clipboard has no data (for example on the Qt
+  platform offscreen)
+- Fixed: a crash at exit with a selected block (the scene of the graph
+  view called a slot of the destroyed view; a Qt assertion in a debug build)
+- Install RPATH to the Qt and core library directories when they are not
+  system directories, and a relative RPATH to PothosQtColorPicker
+- The debian packaging is removed
+
 Release 0.7.1 (2021-07-25)
 ==========================
 

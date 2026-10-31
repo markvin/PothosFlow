@@ -18,7 +18,7 @@ public:
         QSpinBox(parent)
     {
         connect(this, &SpinBox::editingFinished, this, &SpinBox::widgetChanged);
-        connect(this, QOverload<int>::of(&SpinBox::valueChanged), [=](int){this->handleWidgetChanged();});
+        connect(this, QOverload<int>::of(&SpinBox::valueChanged), [=, this](int){this->handleWidgetChanged();});
     }
 
 public slots:

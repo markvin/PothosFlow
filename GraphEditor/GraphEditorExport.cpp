@@ -38,7 +38,7 @@ static QJsonValue parseArgDesc(
 
 void GraphEditor::exportToJSONTopology(const QString &fileName)
 {
-    _logger.information("Exporting %s", fileName.toStdString());
+    POTHOS_LOG_INFORMATION("PothosFlow.GraphEditor", "Exporting {}", fileName.toStdString());
     QJsonObject topObj;
 
     //all graph objects excluding widgets which are not exported
@@ -160,6 +160,6 @@ void GraphEditor::exportToJSONTopology(const QString &fileName)
     QFile jsonFile(fileName);
     if (not jsonFile.open(QFile::WriteOnly) or jsonFile.write(data) == -1)
     {
-        _logger.error("Error exporting %s: %s", fileName.toStdString(), jsonFile.errorString().toStdString());
+        POTHOS_LOG_ERROR("PothosFlow.GraphEditor", "Error exporting {}: {}", fileName.toStdString(), jsonFile.errorString().toStdString());
     }
 }

@@ -13,7 +13,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <Pothos/Plugin.hpp>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 
 /*!
  * We could remove the timer with the eval-background system.
@@ -45,7 +45,7 @@ PropertyEditWidget::PropertyEditWidget(const QString &initialValue, const QJsonO
     _modeButton->setFixedSize(QSize(20, 20));
     //focus color is distracting, dont enable focus
     _modeButton->setFocusPolicy(Qt::NoFocus);
-    connect(_modeButton, &QToolButton::clicked, [=](void){this->handleModeButtonClicked();});
+    connect(_modeButton, &QToolButton::clicked, [=, this](void){this->handleModeButtonClicked();});
 
     //layout internal widgets
     _editLayout->setSpacing(0);
@@ -128,8 +128,7 @@ void PropertyEditWidget::reloadParamDesc(const QJsonObject &paramDesc_)
     }
     catch(const Pothos::Exception &ex)
     {
-        static auto &logger = Poco::Logger::get("PothosFlow.BlockPropertiesPanel");
-        logger.error("Error creating '%s' widget:\n%s", widgetType.toStdString(), ex.displayText());
+        POTHOS_LOG_ERROR("PothosFlow.BlockPropertiesPanel", "Error creating '{}' widget:\n{}", widgetType.toStdString(), ex.displayText());
         widgetType = "LineEdit";
         _editWidget = editWidgetFactory(widgetType, paramDesc, _editParent);
     }

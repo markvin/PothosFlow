@@ -6,7 +6,7 @@
 #include "GraphObjects/GraphObject.hpp"
 #include "GraphEditor/GraphState.hpp"
 #include "GraphEditor/DockingTabWidget.hpp"
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <QJsonObject>
 #include <QPointer>
 
@@ -187,7 +187,6 @@ private slots:
     void handlePollWidgetTimer(void);
 
 private:
-    Poco::Logger &_logger;
     QTabWidget *_parentTabWidget;
 
     void loadPages(const QJsonArray &pages, const QString &type);

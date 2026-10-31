@@ -46,7 +46,7 @@ public slots:
     void handleLockedChanged(const bool locked);
 
 protected:
-    void enterEvent(QEnterEventCompat *event) override;
+    void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
     void updateShowGrip(void);
     void paintEvent(QPaintEvent *event) override;

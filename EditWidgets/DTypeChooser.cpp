@@ -27,8 +27,8 @@ public:
         layout->setContentsMargins(QMargins());
 
         layout->addWidget(_comboBox, 1);
-        connect(_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int){emit this->widgetChanged();});
-        connect(_comboBox, &QComboBox::editTextChanged, [=](const QString &){emit this->entryChanged();});
+        connect(_comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [=, this](int){emit this->widgetChanged();});
+        connect(_comboBox, &QComboBox::editTextChanged, [=, this](const QString &){emit this->entryChanged();});
 
         if (editDimension)
         {
@@ -37,8 +37,8 @@ public:
             _spinBox->setPrefix("x");
             _spinBox->setMinimum(1);
             _spinBox->setMaximum(std::numeric_limits<short>::max()); //numeric maximum affects line edit width
-            connect(_spinBox, &QSpinBox::editingFinished, [=](void){emit this->widgetChanged();});
-            connect(_spinBox, QOverload<int>::of(&QSpinBox::valueChanged), [=](int){emit this->entryChanged();});
+            connect(_spinBox, &QSpinBox::editingFinished, [=, this](void){emit this->widgetChanged();});
+            connect(_spinBox, QOverload<int>::of(&QSpinBox::valueChanged), [=, this](int){emit this->entryChanged();});
         }
 
         _comboBox->setObjectName("BlockPropertiesEditWidget"); //to pick up eval color style

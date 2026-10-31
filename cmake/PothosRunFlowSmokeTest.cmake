@@ -19,7 +19,7 @@ foreach(var PREFIX TEST_HOME_DIR BINDIR LIBDIR SMOKE_TEST)
     endif ()
 endforeach()
 
-file(GLOB blocks_dirs "${PREFIX}/*/Pothos/modules*/blocks")
+file(GLOB blocks_dirs "${PREFIX}/${LIBDIR}/Pothos/modules*/blocks")
 if (NOT blocks_dirs)
     message(FATAL_ERROR "PothosRunFlowSmokeTest: the blocks toolkit is not installed in ${PREFIX}. "
         "The smoke test needs PothosBlocks (/blocks/copier in the block cache). "
@@ -29,6 +29,14 @@ endif ()
 include(${CMAKE_CURRENT_LIST_DIR}/PothosTestEnv.cmake)
 pothos_test_env("${PREFIX}" "${TEST_HOME_DIR}" "${BINDIR}" "${LIBDIR}")
 if (PLUGIN_PATH)
+    #the core does not skip a second copy of a module: two copies of the flow
+    #module give "plugin already registered" errors
+    file(GLOB installed "${PREFIX}/${LIBDIR}/Pothos/modules*/flow")
+    if (installed)
+        message(FATAL_ERROR "PothosRunFlowSmokeTest: flow is also installed in ${installed}. "
+            "The test would load two copies of the flow module. Remove the installed copy, "
+            "or run the test against another installation of the core.")
+    endif ()
     set(ENV{POTHOS_PLUGIN_PATH} "${PLUGIN_PATH}")
 endif ()
 if (WIN32 AND STAGE_BINDIR)

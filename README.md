@@ -81,7 +81,14 @@ tests. Without it, `flow.smoke` stops with an error.
 
 The test needs no display: it uses the Qt platform `offscreen`. The main
 window starts a Pothos server on the fixed locator port, thus the test has
-the CTest resource lock `pothos_locator_port`.
+the CTest resource lock `pothos_locator_port`. Close a running PothosFlow
+before you run the test: the second server cannot use the port, and the
+test fails (the application has the same behavior).
+
+`flow.smoke` stops with an error when flow is also installed in the
+prefix of the core (the core would load the two copies of the flow
+module). Remove the installed copy, or test against another installation
+of the core.
 
 ## Licensing information
 

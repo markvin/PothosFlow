@@ -14,11 +14,7 @@ MainSplash *MainSplash::global(void)
 
 MainSplash::MainSplash(QWidget *parent):
     QSplashScreen(
-        #if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-        parent,
-        #else
-        parent->screen(), //old constructor deprecated 5.15
-        #endif
+        parent->screen(),
         QPixmap(makeIconPath("PothosSplash.png")))
 {
     globalMainSplash = this;

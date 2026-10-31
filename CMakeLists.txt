@@ -295,12 +295,17 @@ endif()
 set_target_properties(PothosFlow PROPERTIES AUTORCC ON)
 target_link_libraries(PothosFlow PRIVATE PothosFlowApp)
 #the relative path from the executable to the library dir of the prefix
+#(an absolute bundle destination is outside the prefix)
 if(APPLE)
     set(flow_exe_dir "${BUNDLE_DESTINATION}/PothosFlow.app/Contents/MacOS")
 else()
     set(flow_exe_dir "${CMAKE_INSTALL_BINDIR}")
 endif()
-file(RELATIVE_PATH flow_rpath "/prefix/${flow_exe_dir}" "/prefix/${CMAKE_INSTALL_LIBDIR}")
+if(IS_ABSOLUTE "${flow_exe_dir}")
+    file(RELATIVE_PATH flow_rpath "${flow_exe_dir}" "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+else()
+    file(RELATIVE_PATH flow_rpath "/prefix/${flow_exe_dir}" "/prefix/${CMAKE_INSTALL_LIBDIR}")
+endif()
 flow_target(PothosFlow RPATH "${flow_rpath}")
 
 install(

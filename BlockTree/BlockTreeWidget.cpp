@@ -192,7 +192,7 @@ bool BlockTreeWidget::blockDescMatchesFilter(const QJsonObject &blockDesc)
     return (candidate.indexOf(searchToken) != -1);
 }
 
-QMimeData *BlockTreeWidget::mimeData(const QList<QTreeWidgetItem *> mimeDataRef(items)) const
+QMimeData *BlockTreeWidget::mimeData(const QList<QTreeWidgetItem *> &items) const
 {
     for (auto item : items)
     {

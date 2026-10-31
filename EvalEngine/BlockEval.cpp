@@ -507,12 +507,7 @@ QStringList BlockEval::getConstantsUsed(const QString &expr, const size_t depth)
 
     //create a recursive list of used constants by traversing expressions
     QStringList used;
-    #if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
-        #define behavior QString::SkipEmptyParts
-    #else
-        #define behavior Qt::SkipEmptyParts //old flags deprecated in 5.14
-    #endif
-    for (const auto &tok : expr.split(QRegularExpression("\\W"), behavior))
+    for (const auto &tok : expr.split(QRegularExpression("\\W"), Qt::SkipEmptyParts))
     {
         //is this token a constant? then inspect it
         if (_newBlockInfo.constants.count(tok) != 0)

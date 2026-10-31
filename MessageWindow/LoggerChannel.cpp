@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2014 Josh Blum
+// Copyright (c) 2013-2020 Josh Blum
 //                    2026 Pothos contributors
 // SPDX-License-Identifier: BSL-1.0
 

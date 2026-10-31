@@ -81,11 +81,8 @@ int main(int argc, char **argv)
         std::_Exit(EXIT_FAILURE);
     }).detach();
 
-    FlowProcessSetup processSetup;
-    QApplication app(argc, argv);
-    configureFlowApplication(app);
-
-    //every record at Error level or worse is a failure
+    //every record at Error level or worse is a failure, also in the exit
+    //path (the destruction of the application and the syslog listener)
     std::mutex errorsMutex;
     std::vector<LogRecord> errors;
     const auto errorListener = Logger::addListener([&](const LogRecord &r)
@@ -94,6 +91,11 @@ int main(int argc, char **argv)
         std::lock_guard<std::mutex> lock(errorsMutex);
         errors.push_back(r);
     });
+
+    {
+    FlowProcessSetup processSetup;
+    QApplication app(argc, argv);
+    configureFlowApplication(app);
 
     POTHOS_EXCEPTION_TRY
     {
@@ -163,12 +165,13 @@ int main(int argc, char **argv)
         window->close();
         delete window;
         QApplication::processEvents();
-        check("exit", true);
+        check("window_closed", true);
     }
     POTHOS_EXCEPTION_CATCH (const Pothos::Exception &ex)
     {
         check("exception", false, ex.displayText());
     }
+    } //the application and the syslog listener end here
 
     Logger::flush();
     Logger::removeListener(errorListener);

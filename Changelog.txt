@@ -13,6 +13,8 @@ Release 0.8.0 (pending)
   Help -> About, the message window and the exit
 - Fixed: a crash when the clipboard has no data (for example on the Qt
   platform offscreen)
+- Fixed: a crash at exit with a selected block (the scene of the graph
+  view called a slot of the destroyed view; a Qt assertion in a debug build)
 - Install RPATH to the Qt and core library directories when they are not
   system directories, and a relative RPATH to PothosQtColorPicker
 - The debian packaging is removed

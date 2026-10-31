@@ -10,9 +10,15 @@
 #include "MainWindow/MainWindow.hpp"
 #include "MainWindow/MainActions.hpp"
 #include "BlockTree/BlockCache.hpp"
+#include "GraphEditor/GraphEditor.hpp"
+#include "GraphEditor/GraphEditorTabs.hpp"
+#include "GraphEditor/GraphDraw.hpp"
 #include <Pothos/Exception.hpp>
 #include <Pothos/System/Logger.hpp>
 #include <QAction>
+#include <QAbstractButton>
+#include <QGraphicsItem>
+#include <QGraphicsScene>
 #include <QApplication>
 #include <QElapsedTimer>
 #include <QJsonArray>
@@ -107,12 +113,15 @@ int main(int argc, char **argv)
         //the first update can end in the constructor (the splash screen processes
         //the events): connect, then update the cache again
         bool cacheReady = false, copierFound = false;
+        QJsonObject copierDesc;
         QObject::connect(BlockCache::global(), &BlockCache::blockDescUpdate, [&](const QJsonArray &descs)
         {
             cacheReady = true;
             for (const auto &desc : descs)
             {
-                if (desc.toObject()["path"].toString() == "/blocks/copier") copierFound = true;
+                if (desc.toObject()["path"].toString() != "/blocks/copier") continue;
+                copierFound = true;
+                copierDesc = desc.toObject();
             }
         });
         BlockCache::global()->update();
@@ -161,8 +170,37 @@ int main(int argc, char **argv)
         }
         check("message_window", markerShown, "the message window does not show " + marker);
 
-        //5) close the window: the destructor unloads the plugins and stops the server
+        //5) a selected block in the graph editor: the exit destroys it with the scene
+        auto editorTabs = window->findChild<GraphEditorTabs *>();
+        auto editor = (editorTabs == nullptr)? nullptr : editorTabs->getCurrentGraphEditor();
+        bool blockAdded = false;
+        if (editor != nullptr and not copierDesc.isEmpty())
+        {
+            auto draw = editor->getCurrentGraphDraw();
+            editor->handleAddBlock(copierDesc, QPointF(100, 100), draw);
+            for (auto item : draw->scene()->items())
+            {
+                if (item->flags() & QGraphicsItem::ItemIsSelectable) {item->setSelected(true); blockAdded = true;}
+            }
+        }
+        check("graph_block", blockAdded, "no graph editor or no block in its scene");
+
+        //6) close the window: the destructor unloads the plugins and stops the server
+        //the topology has unsaved changes: answer "No" to the exit question
+        QTimer exitAnswer;
+        QObject::connect(&exitAnswer, &QTimer::timeout, [&exitAnswer]
+        {
+            for (auto widget : QApplication::topLevelWidgets())
+            {
+                auto box = qobject_cast<QMessageBox *>(widget);
+                if (box == nullptr or not box->isVisible() or box->windowTitle() != "Exit: unsaved changes!") continue;
+                exitAnswer.stop();
+                box->button(QMessageBox::No)->click();
+            }
+        });
+        exitAnswer.start(100);
         window->close();
+        exitAnswer.stop();
         delete window;
         QApplication::processEvents();
         check("window_closed", true);

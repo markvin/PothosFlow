@@ -73,7 +73,9 @@ GraphDraw::GraphDraw(QWidget *parent):
 
 GraphDraw::~GraphDraw(void)
 {
-    return;
+    //the scene is a child: QWidget deletes it after this destructor, and its
+    //items emit selectionChanged when they go; this object is gone then
+    QObject::disconnect(this->scene(), nullptr, this, nullptr);
 }
 
 void GraphDraw::handleGraphDebugViewChange(void)

@@ -74,7 +74,9 @@ module of the stage. The smoke test does these checks:
 3. Help → About shows the window "About Pothos" (modal on Linux and
    Windows; on macOS Qt shows this window without modality).
 4. The message window shows a log message.
-5. The window closes, and no record at Error level or worse is logged.
+5. A selected block is in the graph editor.
+6. The window closes (the test answers "No" to the question about the
+   unsaved changes), and no record at Error level or worse is logged.
 
 Install PothosBlocks into the prefix of the core before you run the
 tests. Without it, `flow.smoke` stops with an error.

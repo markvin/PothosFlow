@@ -16,7 +16,7 @@ public:
     LineEdit(QWidget *parent):
         QLineEdit(parent)
     {
-        connect(this, &QLineEdit::textEdited, [=](const QString &){emit this->entryChanged();});
+        connect(this, &QLineEdit::textEdited, [=, this](const QString &){emit this->entryChanged();});
         connect(this, &QLineEdit::returnPressed, this, &LineEdit::commitRequested);
     }
 

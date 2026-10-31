@@ -7,7 +7,7 @@
 #include "GraphEditor/GraphDraw.hpp"
 #include "GraphEditor/Constants.hpp"
 #include <Pothos/Exception.hpp>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <QPainter>
 #include <QPolygonF>
 #include <QStaticText>
@@ -127,8 +127,7 @@ void GraphConnection::setSigSlotPairs(const std::vector<SigSlotPair> &pairs)
 
 static void doSigSlotWarning(const QString &name, const GraphConnectionEndpoint &ep)
 {
-    static auto &logger = Poco::Logger::get("PothosFlow.GraphConnection");
-    logger.warning("cant find %s '%s' in %s when connecting signal/slot pair",
+    POTHOS_LOG_WARNING("PothosFlow.GraphConnection", "cant find {} '{}' in {} when connecting signal/slot pair",
         directionToStr(ep.getConnectableAttrs().direction).toStdString(),
         name.toStdString(), ep.getObj()->getId().toStdString());
 }

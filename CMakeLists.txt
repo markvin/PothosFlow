@@ -1,46 +1,111 @@
 ########################################################################
-# Project setup
+# PothosFlow: the graphical designer of the Pothos framework.
+# Builds against an installed Pothos core (find_package(Pothos)) and Qt 6.
+# Qt comes from find_package: from the system, or from an install that the
+# user gives with CMAKE_PREFIX_PATH (or Qt6_DIR).
 ########################################################################
-cmake_minimum_required(VERSION 3.1.0)
+cmake_minimum_required(VERSION 3.25)
 project(PothosFlow CXX)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+option(FLOW_BUILD_TESTS "Register the CTest tests of flow" ${PROJECT_IS_TOP_LEVEL})
+option(FLOW_WARNINGS_AS_ERRORS "Treat compiler warnings as errors (GCC and Clang)" OFF)
 
-if(${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
-    find_package(Pothos "0.6.0" CONFIG REQUIRED)
-else()
-    find_package(Pothos CONFIG REQUIRED) #in-tree build
+#the core defines the variable POTHOS_ROOT (its install prefix), and the
+#runtime environment often sets POTHOS_ROOT too. find_package must not use
+#them as search prefixes (CMP0144): it could find another core than
+#CMAKE_PREFIX_PATH gives. NO_PACKAGE_ROOT_PATH keeps them out.
+if(POLICY CMP0144)
+    cmake_policy(SET CMP0144 NEW)
 endif()
+
+find_package(Pothos CONFIG REQUIRED NO_PACKAGE_ROOT_PATH)
 
 include(GNUInstallDirs)
 
-########################################################################
-# Qt devel setup
-########################################################################
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Concurrent)
-message(STATUS "QT_VERSION_MAJOR=${QT_VERSION_MAJOR}")
-set(CMAKE_AUTOMOC ON)
+#the core loads modules from its own prefix (POTHOS_ROOT): install there
+#when the user does not give CMAKE_INSTALL_PREFIX
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${POTHOS_ROOT}" CACHE PATH "Install prefix (default: the prefix of the Pothos core)" FORCE)
+    message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX} (the prefix of the Pothos core)")
+endif()
 
 ########################################################################
-## Feature registration
+# Qt 6
 ########################################################################
-include(FeatureSummary)
-include(CMakeDependentOption)
-cmake_dependent_option(ENABLE_FLOW "Enable Pothos Flow component" ON "Pothos_FOUND;Qt${QT_VERSION_MAJOR}_FOUND" OFF)
-add_feature_info(Flow ENABLE_FLOW "GUI designer tool for the Pothos framework")
-if (NOT ENABLE_FLOW)
-    return()
+find_package(Qt6 6.5 CONFIG COMPONENTS Widgets Concurrent)
+if(NOT Qt6_FOUND)
+    #Qt can be present without one of its own dependencies (for example the
+    #OpenGL headers for Qt Gui): show the reason that Qt gives
+    set(flow_qt_reason "")
+    if(Qt6_NOT_FOUND_MESSAGE)
+        set(flow_qt_reason "Reason given by Qt: ${Qt6_NOT_FOUND_MESSAGE}\n")
+    endif()
+    message(FATAL_ERROR
+        "PothosFlow: Qt 6 (>= 6.5) with the Widgets and Concurrent components is missing.\n"
+        "${flow_qt_reason}"
+        "Install the Qt 6 package of the system (for example qt6-base; on Debian "
+        "and Ubuntu also the OpenGL headers, for example libgl-dev), "
+        "or give CMAKE_PREFIX_PATH or Qt6_DIR. Refer to README.md.")
 endif()
+message(STATUS "PothosFlow: Qt ${Qt6_VERSION}")
+
+########################################################################
+# Common settings of the targets
+########################################################################
+#flow_warnings(<target>): the common warnings (GCC and Clang, as the core),
+#errors with FLOW_WARNINGS_AS_ERRORS (CI)
+function(flow_warnings target)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PRIVATE -Wall -Wextra)
+        if(FLOW_WARNINGS_AS_ERRORS)
+            target_compile_options(${target} PRIVATE -Werror)
+        endif()
+    endif()
+endfunction()
+
+#a Qt outside the system dirs (an install of the user or of CI): the
+#installed binaries must find it at run time. On Windows the Qt DLL dir is
+#on PATH.
+set(FLOW_EXTRA_RPATH "")
+set(flow_qt_libdir "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBS}")
+if(NOT flow_qt_libdir IN_LIST CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
+    list(APPEND FLOW_EXTRA_RPATH "${flow_qt_libdir}")
+    message(STATUS "PothosFlow: install RPATH ${FLOW_EXTRA_RPATH}")
+endif()
+
+#flow_target(<target> [RPATH <relative path to the library dir>]): C++23,
+#moc, warnings and the install RPATH. The relative RPATH finds
+#PothosQtColorPicker in <libdir> of the same prefix (also a stage prefix).
+function(flow_target target)
+    cmake_parse_arguments(arg "" "RPATH" "" ${ARGN})
+    set_target_properties(${target} PROPERTIES
+        AUTOMOC ON
+        CXX_EXTENSIONS OFF)
+    target_compile_features(${target} PRIVATE cxx_std_23)
+    flow_warnings(${target})
+    set(rpath ${FLOW_EXTRA_RPATH})
+    if(DEFINED arg_RPATH)
+        if(APPLE)
+            list(APPEND rpath "@loader_path/${arg_RPATH}")
+        elseif(UNIX)
+            list(APPEND rpath "$ORIGIN/${arg_RPATH}")
+        endif()
+    endif()
+    if(UNIX AND rpath)
+        set_property(TARGET ${target} APPEND PROPERTY INSTALL_RPATH "${rpath}")
+    endif()
+endfunction()
 
 ########################################################################
 # Color picker library - LGPL separate library
 ########################################################################
 add_library(PothosQtColorPicker SHARED qtcolorpicker/src/qtcolorpicker.cpp)
-target_include_directories(PothosQtColorPicker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/qtcolorpicker/src)
-set_target_properties(PothosQtColorPicker PROPERTIES DEFINE_SYMBOL "QT_QTCOLORPICKER_EXPORT")
-set_target_properties(PothosQtColorPicker PROPERTIES VERSION 0)
-target_link_libraries(PothosQtColorPicker PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_include_directories(PothosQtColorPicker PUBLIC ${PROJECT_SOURCE_DIR}/qtcolorpicker/src)
+set_target_properties(PothosQtColorPicker PROPERTIES
+    DEFINE_SYMBOL "QT_QTCOLORPICKER_EXPORT"
+    VERSION 0)
+target_link_libraries(PothosQtColorPicker PRIVATE Qt6::Widgets)
+flow_target(PothosQtColorPicker)
 install(TARGETS PothosQtColorPicker
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} # .so file
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} # .lib file
@@ -48,50 +113,27 @@ install(TARGETS PothosQtColorPicker
 )
 
 ########################################################################
-# Bundle icon resources with executable
+# Icon resources: a generated .qrc, compiled into each executable
+# (resources in a static library need Q_INIT_RESOURCE)
 ########################################################################
-set(CMAKE_AUTORCC ON)
 file(GLOB ICONS
-    ${CMAKE_CURRENT_SOURCE_DIR}/icons/*.png
-    ${CMAKE_CURRENT_SOURCE_DIR}/icons/*.gif)
-set(RESOURCES_QRC ${CMAKE_CURRENT_BINARY_DIR}/resources.qrc)
-file(WRITE ${RESOURCES_QRC} "<!DOCTYPE RCC><RCC version='1.0'>\n")
-file(APPEND ${RESOURCES_QRC} "<qresource>\n")
+    ${PROJECT_SOURCE_DIR}/icons/*.png
+    ${PROJECT_SOURCE_DIR}/icons/*.gif)
+set(FLOW_RESOURCES_QRC ${PROJECT_BINARY_DIR}/resources.qrc)
+set(flow_qrc "<!DOCTYPE RCC><RCC version='1.0'>\n<qresource>\n")
 foreach(ICON ${ICONS})
     get_filename_component(NAME ${ICON} NAME)
-    file(APPEND ${RESOURCES_QRC} "<file alias='icons/${NAME}'>${ICON}</file>\n")
+    string(APPEND flow_qrc "<file alias='icons/${NAME}'>${ICON}</file>\n")
 endforeach(ICON)
-file(APPEND ${RESOURCES_QRC} "</qresource>\n")
-file(APPEND ${RESOURCES_QRC} "</RCC>\n")
-list(APPEND SOURCES ${RESOURCES_QRC})
+string(APPEND flow_qrc "</qresource>\n</RCC>\n")
+file(CONFIGURE OUTPUT ${FLOW_RESOURCES_QRC} CONTENT "${flow_qrc}")
 
 ########################################################################
-# Resource file - adds an icon to Pothos Flow executable
+# The application sources: an internal static library that the
+# executable and the smoke test link (not installed)
 ########################################################################
-if (MSVC)
-    set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/icons/PothosFlow.ico)
-    set(RES_FILES "${CMAKE_CURRENT_BINARY_DIR}/PothosFlow.rc")
-    file(WRITE "${RES_FILES}" "id ICON \"${ICON_SOURCE}\"")
-    set(CMAKE_RC_COMPILER_INIT windres)
-    enable_language(RC)
-    set(CMAKE_RC_COMPILE_OBJECT
-        "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
-    list(APPEND SOURCES ${RES_FILES})
-endif (MSVC)
-
-if (APPLE)
-    set(ICON_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/icons/PothosFlow.icns)
-    set_source_files_properties(${ICON_SOURCE}
-        PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
-    list(APPEND SOURCES ${ICON_SOURCE})
-endif (APPLE)
-
-########################################################################
-# sources list
-########################################################################
-list(APPEND SOURCES
-    PothosFlow.cpp
-
+add_library(PothosFlowApp STATIC
+    MainWindow/FlowSetup.cpp
     MainWindow/MainWindow.cpp
     MainWindow/MainActions.cpp
     MainWindow/MainMenu.cpp
@@ -163,22 +205,46 @@ list(APPEND SOURCES
     EvalEngine/TopologyEval.cpp
     EvalEngine/TopologyTraversal.cpp
 )
+target_include_directories(PothosFlowApp PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_libraries(PothosFlowApp PUBLIC
+    Pothos::Pothos
+    PothosQtColorPicker
+    Qt6::Widgets
+    Qt6::Concurrent)
+flow_target(PothosFlowApp)
 
 ########################################################################
-# build executable
+# The executable
 ########################################################################
+set(FLOW_EXE_SOURCES PothosFlow.cpp ${FLOW_RESOURCES_QRC})
+
+#an icon in the Windows executable
+if(WIN32)
+    set(flow_rc_file "${PROJECT_BINARY_DIR}/PothosFlow.rc")
+    file(CONFIGURE OUTPUT "${flow_rc_file}"
+        CONTENT "id ICON \"${PROJECT_SOURCE_DIR}/icons/PothosFlow.ico\"\n")
+    list(APPEND FLOW_EXE_SOURCES "${flow_rc_file}")
+endif()
+
+if(APPLE)
+    set(flow_icns ${PROJECT_SOURCE_DIR}/icons/PothosFlow.icns)
+    set_source_files_properties(${flow_icns} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    list(APPEND FLOW_EXE_SOURCES ${flow_icns})
+endif()
 
 set(BUNDLE_DESTINATION ${CMAKE_INSTALL_BINDIR} CACHE STRING "OSX bundle destination")
 
-#under MSVC build a win32 app so a console is not launched with the GUI exe
-if (WIN32)
-    set(CMAKE_EXE_LINKER_FLAGS "/entry:mainCRTStartup ${CMAKE_EXE_LINKER_FLAGS}")
-    add_executable(PothosFlow WIN32 ${SOURCES})
+#under Windows build a GUI application so that a console is not launched with it
+if(WIN32)
+    add_executable(PothosFlow WIN32 ${FLOW_EXE_SOURCES})
+    if(MSVC)
+        target_link_options(PothosFlow PRIVATE /entry:mainCRTStartup)
+    endif()
 
 #under OSX build a bundle so the menu integration works properly
 #this also creates a launcher with an icon when opened in finder
-elseif (APPLE)
-    add_executable(PothosFlow MACOSX_BUNDLE ${SOURCES})
+elseif(APPLE)
+    add_executable(PothosFlow MACOSX_BUNDLE ${FLOW_EXE_SOURCES})
     string(TIMESTAMP Pothos_BUNDLE_VERSION "%Y.%m.%d")
     set_target_properties(PothosFlow PROPERTIES
         MACOSX_BUNDLE TRUE
@@ -190,28 +256,34 @@ elseif (APPLE)
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.pothosware.pothosflow"
         MACOSX_BUNDLE_ICON_FILE "PothosFlow.icns"
         MACOSX_BUNDLE_COPYRIGHT "Copyright (c) 2013-2021 Josh Blum"
+        MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/cmake/Modules/MacOSXBundleInfo.plist.in"
     )
     #provide PothosFlow command line script which calls into the bundle
     set(ABSOLUTE_BUNDLE_DESTINATION ${BUNDLE_DESTINATION})
-    if (NOT IS_ABSOLUTE "${BUNDLE_DESTINATION}")
+    if(NOT IS_ABSOLUTE "${BUNDLE_DESTINATION}")
         set(ABSOLUTE_BUNDLE_DESTINATION ${CMAKE_INSTALL_PREFIX}/${BUNDLE_DESTINATION})
-    endif ()
+    endif()
     configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/PothosFlowOSX.sh
-        ${CMAKE_CURRENT_BINARY_DIR}/PothosFlow @ONLY)
-    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/PothosFlow DESTINATION ${CMAKE_INSTALL_BINDIR})
+        ${PROJECT_SOURCE_DIR}/PothosFlowOSX.sh
+        ${PROJECT_BINARY_DIR}/PothosFlow @ONLY)
+    install(PROGRAMS ${PROJECT_BINARY_DIR}/PothosFlow DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 #otherwise build a standard UNIX style executable
-else ()
-    add_executable(PothosFlow ${SOURCES})
+else()
+    add_executable(PothosFlow ${FLOW_EXE_SOURCES})
     add_subdirectory(Desktop) #freedesktop.org
-endif ()
+endif()
 
-target_include_directories(PothosFlow PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(PothosFlow PRIVATE Pothos)
-target_link_libraries(PothosFlow PRIVATE PothosQtColorPicker)
-target_link_libraries(PothosFlow PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(PothosFlow PRIVATE Qt${QT_VERSION_MAJOR}::Concurrent)
+set_target_properties(PothosFlow PROPERTIES AUTORCC ON)
+target_link_libraries(PothosFlow PRIVATE PothosFlowApp)
+#the relative path from the executable to the library dir of the prefix
+if(APPLE)
+    set(flow_exe_dir "${BUNDLE_DESTINATION}/PothosFlow.app/Contents/MacOS")
+else()
+    set(flow_exe_dir "${CMAKE_INSTALL_BINDIR}")
+endif()
+file(RELATIVE_PATH flow_rpath "/prefix/${flow_exe_dir}" "/prefix/${CMAKE_INSTALL_LIBDIR}")
+flow_target(PothosFlow RPATH "${flow_rpath}")
 
 install(
     TARGETS PothosFlow
@@ -219,13 +291,6 @@ install(
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     COMPONENT pothos_flow
 )
-
-#Qt 6 changed the signature on enterEvent() signature type
-if ("${Qt${QT_VERSION_MAJOR}_VERSION}" VERSION_LESS "6.0")
-    target_compile_definitions(PothosFlow PRIVATE -DQEnterEventCompat=QEvent)
-else()
-    target_compile_definitions(PothosFlow PRIVATE -DQEnterEventCompat=QEnterEvent)
-endif()
 
 ########################################################################
 # Edit widgets module

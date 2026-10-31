@@ -38,8 +38,7 @@ static QJsonArray portInfosToJSON(const std::vector<Pothos::PortInfo> &infos)
 }
 
 BlockEval::BlockEval(void):
-    _queryPortDesc(false),
-    _logger(Poco::Logger::get("PothosFlow.BlockEval"))
+    _queryPortDesc(false)
 {
     qRegisterMetaType<BlockStatus>("BlockStatus");
     this->moveToThread(QApplication::instance()->thread());
@@ -94,7 +93,7 @@ bool BlockEval::shouldDisconnect(void) const
 bool BlockEval::portExists(const QString &name, const bool isInput) const
 {
     const auto portDesc = isInput?_lastBlockStatus.inPortDesc:_lastBlockStatus.outPortDesc;
-    if (portDesc.isSpecified())
+    if (portDesc.has_value())
     {
         for (const auto &val : portDesc.value())
         {
@@ -272,7 +271,7 @@ bool BlockEval::evaluationProcedure(void)
                 const auto jsonDoc = QJsonDocument::fromJson(overlayBytes, &errorParser);
                 if (jsonDoc.isNull())
                 {
-                    _logger.warning("Failed to parse JSON description overlay from %s: %s",
+                    POTHOS_LOG_WARNING("PothosFlow.BlockEval", "Failed to parse JSON description overlay from {}: {}",
                         _newBlockInfo.id.toStdString(), errorParser.errorString().toStdString());
                 }
                 else
@@ -290,9 +289,9 @@ bool BlockEval::evaluationProcedure(void)
             static const std::string noOverlayErrorString = "call(overlay): method does not exist in registry";
             if(std::string::npos == ex.message().find(noOverlayErrorString))
             {
-                poco_error_f2(
-                    _logger,
-                    "%s:overlay() threw the following exception: %s",
+                POTHOS_LOG_ERROR(
+                    "PothosFlow.BlockEval",
+                    "{}:overlay() threw the following exception: {}",
                     proxyBlock.call<std::string>("getName"),
                     ex.message());
             }
@@ -397,11 +396,11 @@ void BlockEval::postStatusToBlock(const BlockStatus &status)
     {
         block->addBlockErrorMsg(errMsg);
     }
-    if (status.inPortDesc.isSpecified())
+    if (status.inPortDesc.has_value())
     {
         block->setInputPortDesc(status.inPortDesc.value());
     }
-    if (status.outPortDesc.isSpecified())
+    if (status.outPortDesc.has_value())
     {
         block->setOutputPortDesc(status.outPortDesc.value());
     }
@@ -640,7 +639,7 @@ bool BlockEval::blockEvalInGUIContext(void)
     }
     catch (const Pothos::Exception &ex)
     {
-        _logger.error("Failed to eval in GUI context %s-%s", _newBlockInfo.id.toStdString(), ex.displayText());
+        POTHOS_LOG_ERROR("PothosFlow.BlockEval", "Failed to eval in GUI context {}-{}", _newBlockInfo.id.toStdString(), ex.displayText());
         _lastBlockStatus.blockErrorMsgs.push_back(tr("Failed to eval in GUI context %1-%2").arg(_newBlockInfo.id).arg(QString::fromStdString(ex.message())));
         return false;
     }

@@ -8,7 +8,7 @@
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrent>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <iostream>
 
 /***********************************************************************
@@ -58,8 +58,7 @@ static Pothos::PluginRegistryInfoDump getRegistryDump(const std::string &uriStr)
     }
     catch (const Pothos::Exception &ex)
     {
-        static auto &logger = Poco::Logger::get("PothosFlow.PluginRegistryTree");
-        logger.error("Failed to dump registry %s - %s", uriStr, ex.displayText());
+        POTHOS_LOG_ERROR("PothosFlow.PluginRegistryTree", "Failed to dump registry {} - {}", uriStr, ex.displayText());
     }
     return Pothos::PluginRegistryInfoDump();
 }

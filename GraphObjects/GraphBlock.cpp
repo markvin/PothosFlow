@@ -970,7 +970,7 @@ void GraphBlock::deserialize(const QJsonObject &obj)
             blockParams.push_back(paramObj);
         }
         blockDescFallback["params"] = blockParams;
-        _impl->logger.error("Cant find block factory with path: '%s'", path.toStdString());
+        POTHOS_LOG_ERROR("PothosFlow.GraphBlock", "Cant find block factory with path: '{}'", path.toStdString());
         this->setBlockDesc(blockDescFallback);
     }
 

@@ -14,8 +14,8 @@
 #include <QStringList>
 #include <memory>
 #include <chrono>
-#include <Poco/Logger.h>
-#include <Poco/Optional.h>
+#include <Pothos/System/Logger.hpp>
+#include <optional>
 
 class EnvironmentEval;
 class ThreadPoolEval;
@@ -52,8 +52,8 @@ struct BlockStatus
     std::map<QString, QString> propertyTypeInfos;
     std::map<QString, QString> propertyErrorMsgs;
     QStringList blockErrorMsgs;
-    Poco::Optional<QJsonArray> inPortDesc;
-    Poco::Optional<QJsonArray> outPortDesc;
+    std::optional<QJsonArray> inPortDesc;
+    std::optional<QJsonArray> outPortDesc;
     QJsonObject overlayDesc;
     QByteArray overlayDescStr;
     std::chrono::high_resolution_clock::time_point overlayExpired;
@@ -223,5 +223,4 @@ private:
     Pothos::Proxy _proxyBlock;
     bool _queryPortDesc;
 
-    Poco::Logger &_logger;
 };

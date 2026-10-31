@@ -120,7 +120,7 @@ void GraphWidgetContainer::setSelected(const bool selected)
         .arg(GraphWidgetBackgroundColor));
 }
 
-void GraphWidgetContainer::enterEvent(QEnterEventCompat *event)
+void GraphWidgetContainer::enterEvent(QEnterEvent *event)
 {
     this->updateShowGrip();
     QWidget::enterEvent(event);

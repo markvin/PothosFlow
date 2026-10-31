@@ -14,7 +14,7 @@
 #include <QAction>
 #include <QDir>
 #include <QStandardPaths>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <iostream>
 #include <cassert>
 
@@ -32,17 +32,17 @@ GraphEditorTabs::GraphEditorTabs(QWidget *parent):
         QString("QTabBar::close-button:pressed {image: url(%1);}").arg(makeIconPath("standardbutton-closetab-down-16.png")));
 
     auto actions = MainActions::global();
-    connect(actions->newAction, &QAction::triggered, [=](void){this->handleNew();});
-    connect(actions->openAction, &QAction::triggered, [=](void){this->handleOpen();});
-    connect(actions->saveAction, &QAction::triggered, [=](void){this->handleSave();});
-    connect(actions->saveAsAction, &QAction::triggered, [=](void){this->handleSaveAs();});
-    connect(actions->saveAllAction, &QAction::triggered, [=](void){this->handleSaveAll();});
-    connect(actions->reloadAction, &QAction::triggered, [=](void){this->handleReload();});
-    connect(actions->closeAction, &QAction::triggered, [=](void){this->handleClose();});
-    connect(actions->exportAction, &QAction::triggered, [=](void){this->handleExport();});
-    connect(actions->exportAsAction, &QAction::triggered, [=](void){this->handleExportAs();});
-    connect(this, &GraphEditorTabs::tabCloseRequested, [=](int i){this->handleCloseIndex(i);});
-    connect(this->tabBar(), &QTabBar::tabMoved, [=](int, int){this->saveState();});
+    connect(actions->newAction, &QAction::triggered, [=, this](void){this->handleNew();});
+    connect(actions->openAction, &QAction::triggered, [=, this](void){this->handleOpen();});
+    connect(actions->saveAction, &QAction::triggered, [=, this](void){this->handleSave();});
+    connect(actions->saveAsAction, &QAction::triggered, [=, this](void){this->handleSaveAs();});
+    connect(actions->saveAllAction, &QAction::triggered, [=, this](void){this->handleSaveAll();});
+    connect(actions->reloadAction, &QAction::triggered, [=, this](void){this->handleReload();});
+    connect(actions->closeAction, &QAction::triggered, [=, this](void){this->handleClose();});
+    connect(actions->exportAction, &QAction::triggered, [=, this](void){this->handleExport();});
+    connect(actions->exportAsAction, &QAction::triggered, [=, this](void){this->handleExportAs();});
+    connect(this, &GraphEditorTabs::tabCloseRequested, [=, this](int i){this->handleCloseIndex(i);});
+    connect(this->tabBar(), &QTabBar::tabMoved, [=, this](int, int){this->saveState();});
 }
 
 GraphEditor *GraphEditorTabs::getGraphEditor(const int i) const
@@ -300,8 +300,7 @@ void GraphEditorTabs::loadState(void)
         if (files.at(i).isEmpty()) continue; //skip empty files
         if (not QFile::exists(files.at(i)))
         {
-            static auto &logger = Poco::Logger::get("PothosFlow.GraphEditorTabs");
-            logger.error("File %s does not exist", files.at(i).toStdString());
+            POTHOS_LOG_ERROR("PothosFlow.GraphEditorTabs", "File {} does not exist", files.at(i).toStdString());
             continue;
         }
         auto editor = new GraphEditor(this);

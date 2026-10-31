@@ -33,7 +33,6 @@ MainWindow *MainWindow::global(void)
 
 MainWindow::MainWindow(QWidget *parent):
     QMainWindow(parent),
-    _logger(Poco::Logger::get("PothosFlow.MainWindow")),
     _splash(new MainSplash(this)),
     _settings(new MainSettings(this)),
     _actions(nullptr),
@@ -76,7 +75,7 @@ MainWindow::MainWindow(QWidget *parent):
     _splash->postMessage(tr("Creating message window..."));
     auto messageWindowDock = new MessageWindowDock(this);
     this->addDockWidget(Qt::BottomDockWidgetArea, messageWindowDock);
-    _logger.information("Welcome to Pothos v%s", Pothos::System::getLibVersion());
+    POTHOS_LOG_INFORMATION("PothosFlow.MainWindow", "Welcome to Pothos v{}", Pothos::System::getLibVersion());
 
     //create graph actions dock
     _splash->postMessage(tr("Creating actions dock..."));
@@ -147,7 +146,7 @@ MainWindow::MainWindow(QWidget *parent):
 
 MainWindow::~MainWindow(void)
 {
-    _logger.information("Save application state");
+    POTHOS_LOG_INFORMATION("PothosFlow.MainWindow", "Save application state");
     this->handleFullScreenViewAction(false); //undo if set -- so we dont save full mode below
     _settings->setValue("MainWindow/geometry", this->saveGeometry());
     _settings->setValue("MainWindow/state", this->saveState());
@@ -162,13 +161,13 @@ MainWindow::~MainWindow(void)
 
     //cleanup widgets which may use plugins or the server
     //this includes active graph blocks and eval engines
-    _logger.information("Shutdown graph editor");
+    POTHOS_LOG_INFORMATION("PothosFlow.MainWindow", "Shutdown graph editor");
     delete _editorTabs;
 
     //unload the plugins
     //increase the log level to avoid deinit verbose
-    _logger.information("Unload Pothos plugins");
-    Poco::Logger::get("").setLevel(Poco::Message::PRIO_INFORMATION);
+    POTHOS_LOG_INFORMATION("PothosFlow.MainWindow", "Unload Pothos plugins");
+    Pothos::System::Logger::setLevel(Pothos::System::LogLevel::Information);
     Pothos::deinit();
 
     //stop the server
@@ -179,7 +178,7 @@ void MainWindow::handleInitDone(void)
 {
     _splash->postMessage(tr("Completing initialization..."));
     _splash->finish(this);
-    _logger.information("Initialization complete");
+    POTHOS_LOG_INFORMATION("PothosFlow.MainWindow", "Initialization complete");
 }
 
 void MainWindow::setWindowTitle(const QString &s)
@@ -266,7 +265,7 @@ void MainWindow::handleReloadPlugins(void)
         if (editor != nullptr) editor->restartEvaluation();
     }
 
-    _logger.information("Reload plugins complete");
+    POTHOS_LOG_INFORMATION("PothosFlow.MainWindow", "Reload plugins complete");
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

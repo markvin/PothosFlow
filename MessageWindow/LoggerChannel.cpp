@@ -1,52 +1,49 @@
-// Copyright (c) 2013-2020 Josh Blum
+// Copyright (c) 2013-2014 Josh Blum
+//                    2026 Pothos contributors
 // SPDX-License-Identifier: BSL-1.0
 
 #include "MessageWindow/LoggerChannel.hpp"
-#include <Poco/SplitterChannel.h>
-#include <Poco/Version.h>
 
-static const long QUEUE_MAX_DEPTH = 30;
+static const size_t QUEUE_MAX_DEPTH = 30;
+
+using Pothos::System::Logger;
 
 LoggerChannel::LoggerChannel(QObject *parent):
     QObject(parent),
-    _logger(Poco::Logger::get("")),
-    _oldLevel(_logger.getLevel()),
-    #if POCO_VERSION < 0x010A0000
-    _splitter(dynamic_cast<Poco::SplitterChannel *>(_logger.getChannel()), true)
-    #else
-    _splitter(_logger.getChannel().cast<Poco::SplitterChannel>())
-    #endif
+    _oldLevel(Logger::getLevel()),
+    _listenerId(0)
 {
-    _logger.setLevel(Poco::Message::PRIO_TRACE); //lowest level -> shows everything
-    if (_splitter) _splitter->addChannel(this);
-    else Poco::Logger::get("PothosFlow.LoggerChannel").error("expected SplitterChannel");
+    Logger::setLevel(Pothos::System::LogLevel::Trace); //lowest level -> shows everything
+    _listenerId = Logger::addListener([this](const Pothos::System::LogRecord &record){this->log(record);});
 }
 
 LoggerChannel::~LoggerChannel(void)
 {
-    return;
+    this->disconnect();
 }
 
 void LoggerChannel::disconnect(void)
 {
-    _logger.setLevel(_oldLevel);
-    if (_splitter) _splitter->removeChannel(this);
+    if (_listenerId == 0) return;
+    Logger::removeListener(_listenerId); //no call of log() after this returns
+    _listenerId = 0;
+    Logger::setLevel(_oldLevel);
 }
 
-void LoggerChannel::log(const Poco::Message &msg)
+void LoggerChannel::log(const Pothos::System::LogRecord &record)
 {
-    std::unique_lock<std::mutex> lock(_mutex);
-    _queue.push(msg);
+    std::lock_guard<std::mutex> lock(_mutex);
+    _queue.push(record);
 
     //remove oldest if we exceed the max depth
     if (_queue.size() > QUEUE_MAX_DEPTH) _queue.pop();
 }
 
-bool LoggerChannel::pop(Poco::Message &msg)
+bool LoggerChannel::pop(Pothos::System::LogRecord &record)
 {
-    std::unique_lock<std::mutex> lock(_mutex);
+    std::lock_guard<std::mutex> lock(_mutex);
     if (_queue.empty()) return false;
-    msg = _queue.front();
+    record = std::move(_queue.front());
     _queue.pop();
     return true;
 }

@@ -78,7 +78,11 @@ private slots:
         QStringList args;
         args.push_back("-Tpng"); //yes png
         args.push_back("-o"); //output to file
-        _tempFile.open();
+        if (not _tempFile.open())
+        {
+            this->displayErrorMessage(tr("Cannot open a temporary file: %1").arg(_tempFile.errorString()));
+            return;
+        }
         args.push_back(_tempFile.fileName());
 
         //launch

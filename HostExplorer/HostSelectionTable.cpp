@@ -182,10 +182,10 @@ HostSelectionTable::HostSelectionTable(QWidget *parent):
     this->setSpan(0, 1, 1, nCols-1);
 
     //connect entry related widgets
-    connect(_addButton, &QToolButton::clicked, [=](void){_lineEdit->handleReturnPressed();});
+    connect(_addButton, &QToolButton::clicked, [=, this](void){_lineEdit->handleReturnPressed();});
     connect(_lineEdit, &HostUriQLineEdit::handleUriEntered, this, &HostSelectionTable::handleAdd);
     connect(_timer, &QTimer::timeout, this, &HostSelectionTable::handleUpdateStatus);
-    connect(_watcher, &FutureWatcherT::finished, [=](void){this->reloadRows(_watcher->result());});
+    connect(_watcher, &FutureWatcherT::finished, [=, this](void){this->reloadRows(_watcher->result());});
     connect(this, &HostSelectionTable::cellClicked, this, &HostSelectionTable::handleCellClicked);
 
     this->reloadTable();
@@ -314,7 +314,7 @@ void HostSelectionTable::reloadTable(void)
         _uriToRow[uri] = row;
         auto removeButton = makeToolButton(this, "list-remove");
         this->setCellWidget(row, 0, removeButton);
-        connect(removeButton, &QToolButton::clicked, [=](void){handleRemove(uri);});
+        connect(removeButton, &QToolButton::clicked, [=, this](void){handleRemove(uri);});
         row++;
     }
 

@@ -11,7 +11,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <cassert>
 
 /***********************************************************************
@@ -42,7 +42,7 @@ void GraphEditor::loadPages(const QJsonArray &pages, const QString &type)
             }
             POTHOS_EXCEPTION_CATCH(const Pothos::Exception &ex)
             {
-                _logger.error("Error creating %s(%s): %s", type.toStdString(),
+                POTHOS_LOG_ERROR("PothosFlow.GraphEditor", "Error creating {}({}): {}", type.toStdString(),
                     jGraphObj["what"].toString().toStdString(), ex.displayText());
                 delete obj;
             }
@@ -59,7 +59,7 @@ void GraphEditor::loadState(const QByteArray &data)
     const auto jsonDoc = QJsonDocument::fromJson(data, &parseError);
     if (jsonDoc.isNull())
     {
-        _logger.error("Error parsing JSON: %s", parseError.errorString().toStdString());
+        POTHOS_LOG_ERROR("PothosFlow.GraphEditor", "Error parsing JSON: {}", parseError.errorString().toStdString());
         return;
     }
 

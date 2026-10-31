@@ -84,11 +84,11 @@ GraphPropertiesPanel::GraphPropertiesPanel(GraphEditor *editor, QWidget *parent)
         _varsMoveDownButton->setToolTip(tr("Move selected global variable down"));
 
         //connect signals
-        connect(_varsAddButton, &QToolButton::clicked, [=](void){this->handleCreateVariable();});
-        connect(_varNameEntry, &QLineEdit::returnPressed, [=](void){this->handleCreateVariable();});
-        connect(_varsRemoveButton, &QToolButton::clicked, [=](void){this->handleVariableRemoval();});
-        connect(_varsMoveUpButton, &QToolButton::clicked, [=](void){this->handleVariableMoveUp();});
-        connect(_varsMoveDownButton, &QToolButton::clicked, [=](void){this->handleVariableMoveDown();});
+        connect(_varsAddButton, &QToolButton::clicked, [=, this](void){this->handleCreateVariable();});
+        connect(_varNameEntry, &QLineEdit::returnPressed, [=, this](void){this->handleCreateVariable();});
+        connect(_varsRemoveButton, &QToolButton::clicked, [=, this](void){this->handleVariableRemoval();});
+        connect(_varsMoveUpButton, &QToolButton::clicked, [=, this](void){this->handleVariableMoveUp();});
+        connect(_varsMoveDownButton, &QToolButton::clicked, [=, this](void){this->handleVariableMoveDown();});
     }
 
     //graph config

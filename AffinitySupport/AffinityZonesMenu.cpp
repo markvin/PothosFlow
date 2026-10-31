@@ -18,15 +18,15 @@ void AffinityZonesMenu::handleZonesChanged(void)
 
     //clear affinity setting
     auto clearAction = this->addAction(tr("Clear affinity"));
-    connect(clearAction, &QAction::triggered, [=](int){emit this->zoneClicked("");});
+    connect(clearAction, &QAction::triggered, [=, this](int){emit this->zoneClicked("");});
 
     //gui affinity setting
     auto guiAction = this->addAction(tr("GUI affinity"));
-    connect(guiAction, &QAction::triggered, [=](int){emit this->zoneClicked("gui");});
+    connect(guiAction, &QAction::triggered, [=, this](int){emit this->zoneClicked("gui");});
 
     if (_dock) for (const auto &name : _dock->zones())
     {
         auto action = this->addAction(tr("Apply %1").arg(name));
-        connect(action, &QAction::triggered, [=](int){emit this->zoneClicked(name);});
+        connect(action, &QAction::triggered, [=, this](int){emit this->zoneClicked(name);});
     }
 }

@@ -44,7 +44,6 @@ static const size_t POLL_WIDGET_CHANGES_MS = 1000;
 
 GraphEditor::GraphEditor(QWidget *parent):
     DockingTabWidget(parent),
-    _logger(Poco::Logger::get("PothosFlow.GraphEditor")),
     _parentTabWidget(qobject_cast<QTabWidget *>(parent)),
     _stateManager(new GraphStateManager(this)),
     _evalEngine(new EvalEngine(this)),
@@ -996,12 +995,12 @@ void GraphEditor::save(void)
     assert(not this->getCurrentFilePath().isEmpty());
 
     const auto fileName = this->getCurrentFilePath();
-    _logger.information("Saving %s", fileName.toStdString());
+    POTHOS_LOG_INFORMATION("PothosFlow.GraphEditor", "Saving {}", fileName.toStdString());
 
     QFile jsonFile(fileName);
     if (not jsonFile.open(QFile::WriteOnly) or jsonFile.write(this->dumpState()) == -1)
     {
-        _logger.error("Error saving %s: %s", fileName.toStdString(), jsonFile.errorString().toStdString());
+        POTHOS_LOG_ERROR("PothosFlow.GraphEditor", "Error saving {}: {}", fileName.toStdString(), jsonFile.errorString().toStdString());
     }
 
     _stateManager->saveCurrent();
@@ -1021,14 +1020,14 @@ void GraphEditor::load(void)
         return;
     }
 
-    _logger.information("Loading %s", fileName.toStdString());
+    POTHOS_LOG_INFORMATION("PothosFlow.GraphEditor", "Loading {}", fileName.toStdString());
     MainSplash::global()->postMessage(tr("Loading %1").arg(fileName));
 
     QFile jsonFile(fileName);
     QByteArray data;
     if (not jsonFile.open(QFile::ReadOnly) or (data = jsonFile.readAll()).isEmpty())
     {
-        _logger.error("Error loading %s: %s", fileName.toStdString(), jsonFile.errorString().toStdString());
+        POTHOS_LOG_ERROR("PothosFlow.GraphEditor", "Error loading {}: {}", fileName.toStdString(), jsonFile.errorString().toStdString());
     }
     else this->loadState(data);
 
@@ -1077,7 +1076,7 @@ void GraphEditor::updateGraphEditorMenus(void)
     {
         if (i == this->activeIndex()) continue;
         auto action = menu->addAction(QString("%1 (%2)").arg(this->tabText(i)).arg(i));
-        connect(action, &QAction::triggered, [=](void){this->handleMoveGraphObjects(i);});
+        connect(action, &QAction::triggered, [=, this](void){this->handleMoveGraphObjects(i);});
     }
 
     menu = mainMenu->insertGraphWidgetsMenu;
@@ -1100,7 +1099,7 @@ void GraphEditor::updateGraphEditorMenus(void)
         //block is a display widget with no active displays:
         {
             auto action = menu->addAction(QString("%1 (%2)").arg(block->getTitle()).arg(block->getId()));
-            connect(action, &QAction::triggered, [=](void){this->handleInsertGraphWidget(block);});
+            connect(action, &QAction::triggered, [=, this](void){this->handleInsertGraphWidget(block);});
             hasGraphWidgetsToInsert = true;
         }
 

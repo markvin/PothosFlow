@@ -10,7 +10,7 @@
 #include <vector>
 #include <memory>
 #include <map>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 
 class BlockEval;
 
@@ -111,5 +111,4 @@ private:
     ConnectionInfos _currentConnections;
 
     bool _failureState;
-    Poco::Logger &_logger;
 };

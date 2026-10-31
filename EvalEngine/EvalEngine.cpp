@@ -19,7 +19,6 @@ EvalEngine::EvalEngine(QObject *parent):
     QObject(parent),
     _tracer(new EvalTracer),
     _flaggedLockUp(false),
-    _logger(Poco::Logger::get("PothosFlow.EvalEngine")),
     _thread(new QThread(this)),
     _monitorTimer(new QTimer(this)),
     _impl(new EvalEngineImpl(*_tracer)),
@@ -46,7 +45,7 @@ EvalEngine::~EvalEngine(void)
     _thread->quit();
     if (not _thread->wait(THREAD_JOIN_MAX_MS))
     {
-        _logger.fatal("Detected lock-up when shutting down evaluation thread:\n%s",
+        POTHOS_LOG_FATAL("PothosFlow.EvalEngine", "Detected lock-up when shutting down evaluation thread:\n{}",
             _tracer->trace().toStdString());
         _thread->wait();
     }
@@ -85,7 +84,7 @@ void EvalEngine::submitTopology(const GraphObjectList &graphObjects)
     {
         auto block = qobject_cast<GraphBlock *>(obj);
         if (block == nullptr) continue;
-        connect(block, &GraphBlock::triggerEvalEvent, [=](void){this->submitBlock(block);});
+        connect(block, &GraphBlock::triggerEvalEvent, [=, this](void){this->submitBlock(block);});
         blockInfos[block->uid()] = blockToBlockInfo(block);
     }
 
@@ -151,7 +150,7 @@ void EvalEngine::handleEvalThreadHeartBeat(void)
     if (_flaggedLockUp)
     {
         _flaggedLockUp = false;
-        _logger.notice("Evaluation thread has recovered. Perhaps a call is taking too long.");
+        POTHOS_LOG_NOTICE("PothosFlow.EvalEngine", "Evaluation thread has recovered. Perhaps a call is taking too long.");
     }
 
     _lastHeartBeat = std::chrono::system_clock::now();
@@ -167,7 +166,7 @@ void EvalEngine::handleMonitorTimeout(void)
     {
         _flaggedLockUp = true;
         _monitorTimer->stop(); //stop so the error messages will not continue
-        _logger.fatal("Detected evaluation thread lock-up. The evaluator will not function:\n%s",
+        POTHOS_LOG_FATAL("PothosFlow.EvalEngine", "Detected evaluation thread lock-up. The evaluator will not function:\n{}",
             _tracer->trace().toStdString());
     }
 }

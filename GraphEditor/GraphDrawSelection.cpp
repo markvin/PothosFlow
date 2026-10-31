@@ -10,7 +10,7 @@
 #include "GraphObjects/GraphWidget.hpp"
 #include "MainWindow/MainActions.hpp"
 #include <Pothos/Exception.hpp>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <QApplication> //control modifier
 #include <QGraphicsLineItem>
 #include <QMouseEvent>
@@ -294,8 +294,7 @@ bool GraphDraw::tryToMakeConnection(const GraphConnectionEndpoint &thisEp)
         }
         catch (const Pothos::Exception &ex)
         {
-            static auto &logger = Poco::Logger::get("PothosFlow.GraphDraw");
-            logger.warning("Cannot connect port %s[%s] to port %s[%s]: %s",
+            POTHOS_LOG_WARNING("PothosFlow.GraphDraw", "Cannot connect port {}[{}] to port {}[{}]: {}",
                 _lastClickSelectEp.getObj()->getId().toStdString(),
                 _lastClickSelectEp.getKey().id.toStdString(),
                 thisEp.getObj()->getId().toStdString(),

@@ -3,9 +3,9 @@
 
 #pragma once
 #include <Pothos/Config.hpp>
+#include <Pothos/System/Logger.hpp>
 #include <QStackedWidget>
-#include <Poco/Message.h>
-#include <Poco/AutoPtr.h>
+#include <memory>
 
 class LoggerChannel;
 class QPlainTextEdit;
@@ -23,14 +23,14 @@ private slots:
     void handleCheckMsgs(void);
 
 private:
-    void handleLogMessage(const Poco::Message &msg);
+    void handleLogMessage(const Pothos::System::LogRecord &record);
 
-    Poco::AutoPtr<LoggerChannel> _channel;
+    std::unique_ptr<LoggerChannel> _channel;
     QPlainTextEdit *_text;
     QToolButton *_clearButton;
     QTimer *_timer;
 
     void resizeEvent(QResizeEvent *event) override;
-    void enterEvent(QEnterEventCompat *event) override;
+    void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
 };

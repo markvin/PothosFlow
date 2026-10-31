@@ -11,7 +11,7 @@
 #include <QFutureWatcher>
 #include <QReadWriteLock>
 #include <QtConcurrent/QtConcurrent>
-#include <Poco/Logger.h>
+#include <Pothos/System/Logger.hpp>
 #include <iostream>
 #include <map>
 
@@ -32,8 +32,7 @@ static QJsonArray queryBlockDescs(const QString &uri)
     }
     catch (const Pothos::Exception &ex)
     {
-        static auto &logger = Poco::Logger::get("PothosFlow.BlockCache");
-        logger.warning("Failed to query JSON Docs from %s - %s", uri.toStdString(), ex.displayText());
+        POTHOS_LOG_WARNING("PothosFlow.BlockCache", "Failed to query JSON Docs from {} - {}", uri.toStdString(), ex.displayText());
     }
 
     return QJsonArray(); //empty JSON array

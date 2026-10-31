@@ -211,7 +211,8 @@ void GraphEditor::updateEnabledActions(void)
 
     //can we paste something from the clipboard?
     auto mimeData = QApplication::clipboard()->mimeData();
-    const bool canPaste = mimeData->hasFormat("binary/json/pothos_object_array") and
+    const bool canPaste = mimeData != nullptr and //no clipboard data (for example on the offscreen platform)
+                      mimeData->hasFormat("binary/json/pothos_object_array") and
                       not mimeData->data("binary/json/pothos_object_array").isEmpty();
     actions->pasteAction->setEnabled(canPaste);
 
@@ -598,7 +599,8 @@ void GraphEditor::handlePaste(void)
     auto draw = this->getCurrentGraphDraw();
 
     auto mimeData = QApplication::clipboard()->mimeData();
-    const bool canPaste = mimeData->hasFormat("binary/json/pothos_object_array") and
+    const bool canPaste = mimeData != nullptr and //no clipboard data (for example on the offscreen platform)
+                      mimeData->hasFormat("binary/json/pothos_object_array") and
                       not mimeData->data("binary/json/pothos_object_array").isEmpty();
     if (not canPaste) return;
 

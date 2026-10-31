@@ -296,3 +296,35 @@ install(
 # Edit widgets module
 ########################################################################
 add_subdirectory(EditWidgets)
+
+########################################################################
+# Tests: flow is staged into a prefix inside the build tree, and the
+# smoke test makes the main window against the installed core with the
+# flow module of the stage. Flow needs no display: Qt uses the offscreen
+# platform.
+########################################################################
+if(FLOW_BUILD_TESTS)
+    add_subdirectory(Tests)
+    enable_testing()
+    set(FLOW_STAGE_DIR ${PROJECT_BINARY_DIR}/stage)
+
+    add_test(NAME flow.stage
+        COMMAND ${CMAKE_COMMAND} --install ${PROJECT_BINARY_DIR} --prefix ${FLOW_STAGE_DIR} --config $<CONFIG>)
+    set_tests_properties(flow.stage PROPERTIES FIXTURES_SETUP flow_stage)
+
+    add_test(NAME flow.smoke
+        COMMAND ${CMAKE_COMMAND}
+            -DPREFIX=${POTHOS_ROOT}
+            -DTEST_HOME_DIR=${PROJECT_BINARY_DIR}/test-home
+            -DBINDIR=bin
+            -DLIBDIR=${CMAKE_INSTALL_LIBDIR}
+            -DPLUGIN_PATH=${FLOW_STAGE_DIR}/${CMAKE_INSTALL_LIBDIR}/Pothos/modules${POTHOS_ABI_VERSION}
+            -DSTAGE_BINDIR=${FLOW_STAGE_DIR}/${CMAKE_INSTALL_BINDIR}
+            -DSMOKE_TEST=$<TARGET_FILE:PothosFlowSmokeTest>
+            -P ${PROJECT_SOURCE_DIR}/cmake/PothosRunFlowSmokeTest.cmake)
+    #the main window starts a server on the fixed locator port of Pothos
+    set_tests_properties(flow.smoke PROPERTIES
+        FIXTURES_REQUIRED flow_stage
+        RESOURCE_LOCK pothos_locator_port
+        TIMEOUT 240)
+endif()

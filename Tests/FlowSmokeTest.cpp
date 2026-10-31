@@ -67,12 +67,13 @@ static bool waitFor(const std::function<bool(void)> &condition, const int timeou
     return true;
 }
 
-static QMessageBox *findAboutBox(void)
+//a visible message box with the text; not the title: a message box on macOS has no title
+static QMessageBox *findMessageBox(const QString &text)
 {
     for (auto widget : QApplication::topLevelWidgets())
     {
         auto box = qobject_cast<QMessageBox *>(widget);
-        if (box != nullptr and box->isVisible() and box->windowTitle() == "About Pothos") return box;
+        if (box != nullptr and box->isVisible() and box->text().contains(text)) return box;
     }
     return nullptr;
 }
@@ -135,7 +136,7 @@ int main(int argc, char **argv)
         QTimer finder;
         QObject::connect(&finder, &QTimer::timeout, [&]
         {
-            auto box = findAboutBox();
+            auto box = findMessageBox("Pothos v"); //the about window of MainWindow::handleShowAbout()
             if (box == nullptr) return;
             aboutFound = true;
             aboutModal = (QApplication::activeModalWidget() == box);
@@ -148,9 +149,9 @@ int main(int argc, char **argv)
         finder.stop();
         #ifdef Q_OS_MACOS
         if (aboutFound and not aboutModal) std::cout << "INFO about window is not modal on macOS (QMessageBox::about)" << std::endl;
-        check("about_window", aboutFound, "no visible window \"About Pothos\"");
+        check("about_window", aboutFound, "no visible about window");
         #else
-        check("about_window", aboutFound and aboutModal, aboutFound? "the about window is not modal" : "no visible window \"About Pothos\"");
+        check("about_window", aboutFound and aboutModal, aboutFound? "the about window is not modal" : "no visible about window");
         #endif
 
         //4) the message window shows a log message (the core log listener)
@@ -190,13 +191,10 @@ int main(int argc, char **argv)
         QTimer exitAnswer;
         QObject::connect(&exitAnswer, &QTimer::timeout, [&exitAnswer]
         {
-            for (auto widget : QApplication::topLevelWidgets())
-            {
-                auto box = qobject_cast<QMessageBox *>(widget);
-                if (box == nullptr or not box->isVisible() or box->windowTitle() != "Exit: unsaved changes!") continue;
-                exitAnswer.stop();
-                box->button(QMessageBox::No)->click();
-            }
+            auto box = findMessageBox("Would you like to save changes?");
+            if (box == nullptr) return;
+            exitAnswer.stop();
+            box->button(QMessageBox::No)->click();
         });
         exitAnswer.start(100);
         window->close();

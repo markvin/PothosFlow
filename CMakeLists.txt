@@ -63,13 +63,29 @@ function(flow_warnings target)
     endif()
 endfunction()
 
-#a Qt outside the system dirs (an install of the user or of CI): the
-#installed binaries must find it at run time. On Windows the Qt DLL dir is
-#on PATH.
+#a Qt or a core outside the system dirs (an install of the user or of CI):
+#the installed binaries must find them at run time, also when flow is
+#installed into another prefix than the core (for example the stage of
+#the tests). On Windows the Qt and core DLL dirs are on PATH.
 set(FLOW_EXTRA_RPATH "")
-set(flow_qt_libdir "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBS}")
-if(NOT flow_qt_libdir IN_LIST CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES)
-    list(APPEND FLOW_EXTRA_RPATH "${flow_qt_libdir}")
+set(flow_rpath_dirs "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBS}")
+get_target_property(flow_pothos_imported Pothos::Pothos IMPORTED)
+if(flow_pothos_imported)
+    get_target_property(flow_pothos_configs Pothos::Pothos IMPORTED_CONFIGURATIONS)
+    foreach(config ${flow_pothos_configs})
+        get_target_property(flow_pothos_location Pothos::Pothos IMPORTED_LOCATION_${config})
+        if(flow_pothos_location)
+            get_filename_component(flow_pothos_libdir "${flow_pothos_location}" DIRECTORY)
+            list(APPEND flow_rpath_dirs "${flow_pothos_libdir}")
+        endif()
+    endforeach()
+endif()
+foreach(dir ${flow_rpath_dirs})
+    if(NOT dir IN_LIST CMAKE_CXX_IMPLICIT_LINK_DIRECTORIES AND NOT dir IN_LIST FLOW_EXTRA_RPATH)
+        list(APPEND FLOW_EXTRA_RPATH "${dir}")
+    endif()
+endforeach()
+if(FLOW_EXTRA_RPATH)
     message(STATUS "PothosFlow: install RPATH ${FLOW_EXTRA_RPATH}")
 endif()
 
